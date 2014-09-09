@@ -10,4 +10,4 @@ You need:
 * configobj (pip install configobj)
 
 Also you need to provide access_token (you can find out more at https://vk.com/dev/auth_mobile )
-
+And you need to provide "settings.ini" file with "vk_token" on it.
