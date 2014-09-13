@@ -1,4 +1,9 @@
 # -*- coding: utf-8 -*-
+
+# VK Bot by Ax3 (Nazar Kravtsov) 
+# vk.com/ax3effect
+
+# Main Modules
 import vk
 import time, threading
 import requests
@@ -6,18 +11,34 @@ import json
 import ast
 import traceback
 import random
+try:
+    import dataset
+    database_enable = 1
+except ImportError:
+    print "No module 'dataset'. Database statistics disabled"
+    database_enable = 0
 from datetime import datetime
 from random import randint
 from configobj import ConfigObj
 
-weather_disable = 0 
+#### Settings
+customMsg = "\n // vk.com/ax3bot ID: "
+show_names = 0 # 1 or 0, disable it for better performance
+blacklist = [1,2,3] # blacklist, VK ID's
+#database_enable = 0  #override database setting
 
-print "Initializing..."
+#### Settings
+
+#### Config files
 config = ConfigObj("settings.ini")
 vk_access_token = config['vk_token']
 geocodingAPI = config['google_geocoding']
 forecastioAPI = config['forecastio']
+#### Config files
 
+print "Initializing..."
+
+#### Help messages
 helpMessage = (" - Помощь - \n"
     "test \n"
     "привет \n"
@@ -25,15 +46,37 @@ helpMessage = (" - Помощь - \n"
     "погода (ГОРОД) \n"
     "сосчитать (13 * 37) \n"
     "правда (что-то) \n"
+    "статистика \n"
     )
 
 attempt_id = 0
 chat_id = 0
-#### Settings
-customMsg = "\n //ax3bot "
-show_names = 0 # 1 or 0, disable it for better performance
-#### Settings
+weather_disable = 0 
+
 connect_success = 0
+
+if database_enable == 1:
+    def database(vid, vname):
+        db = dataset.connect('sqlite:///vkcount2.db')
+        global table
+        table = db['user']
+        checkExist = table.find_one(vid=vid)
+        try:
+            #print checkExist["vcount"]
+            if checkExist["vcount"] or checkExist["vcount"] == 0:
+                ccount = checkExist["vcount"] + 1
+                #print "CCOUNT - " + str(ccount)
+                table.update(dict(vid=vid, vcount=ccount), ['vid'])
+            else: 
+                print "asdfasdfasdfasdfassdaf"
+        except Exception:
+            table.insert(dict(vid=vid, vname=vname, vcount=0))
+        #for user in db['user']:
+            #print "ID : " + str(user['vid']) 
+            #print "VCOUNT : " + str(user['vcount'])
+
+
+
 
 
 vkapi = vk.API(access_token=vk_access_token)
@@ -68,6 +111,9 @@ def msgcheck(msg):
             msgGeoSplit = msg.split()
             msgGeoSplit = msgGeoSplit[1:]
             msgGeoString = ' '.join(msgGeoSplit)
+            if msgGeoString == "":
+                vk_message = "Описание:\n погода (город)"
+                msgsend(userid, vk_message, chat_id)
             print msgGeoString
             geocodeURL = "https://maps.googleapis.com/maps/api/geocode/json?address={}&key={}".format(msgGeoString, geocodingAPI)
             print geocodeURL
@@ -141,6 +187,15 @@ def msgcheck(msg):
         pravdafinal = random.choice(pravdamsg)
         vk_message = str(pravdafinal)
         msgsend(userid, vk_message, chat_id)
+    elif msg.find("статистика") == 0:
+        try:
+            print "Stats get"
+            userStats = table.find_one(vid=userid)
+            vk_message = "Здравствуйте, {}, вы написали {} сообщений с момента включения бота.".format(theName.encode('UTF-8'),userStats["vcount"])
+            msgsend(userid, vk_message, chat_id)
+        except Exception:
+            traceback.print_exc()
+
 
 
 
@@ -148,29 +203,36 @@ def msgsend(userid, message, chatid):
     try:
         atest = result2[7]["from"]
         try:
-            message = message + customMsg + str(attempt_id)
-            vkapi.messages.send(chat_id = chat_id, message = message)
+            if int(userid) in blacklist:
+                pass
+                #message = message + customMsg + str(attempt_id)
+                #vkapi.messages.send(chat_id = chat_id, message = message)
+            else:
+                message = message + customMsg + str(attempt_id)
+                vkapi.messages.send(chat_id = chat_id, message = message)
         except Exception:
-            print "Message send error!"
+            #traceback.print_exc()
             pass
     except KeyError:
         try:            
             message = message + customMsg + str(attempt_id)
             vkapi.messages.send(message = message, user_id = userid)
         except Exception:
-            traceback.print_exc()
-            print "Message send error!"
+            #traceback.print_exc()
             pass
         pass
 
 
-urlstring = "http://" + str(asd["server"]) + "?act=a_check&key=" + str(asd["key"]) + "&ts=" + str(asd["ts"]) + "&wait=25&mode=2"
+#urlstring = "http://" + str(asd["server"]) + "?act=a_check&key=" + str(asd["key"]) + "&ts=" + str(asd["ts"]) + "&wait=25&mode=2"
+#asd = vkapi.messages.getLongPollServer(use_ssl = 0)
+#аurlstring = "http://" + str(asd["server"]) + "?act=a_check&key=" + str(asd["key"]) + "&ts=" + str(asd["ts"]) + "&wait=25&mode=2"
 print "Connecting..."
 
 while True:
     try:
         asd = vkapi.messages.getLongPollServer(use_ssl = 0)
         urlstring = "http://" + str(asd["server"]) + "?act=a_check&key=" + str(asd["key"]) + "&ts=" + str(asd["ts"]) + "&wait=25&mode=2"
+
         response = requests.get(urlstring)
         result = ast.literal_eval(response.content)
         string2 = response.content[6]
@@ -178,7 +240,6 @@ while True:
             print "Ax3 Bot successfully connected!"
             connect_success = 1
     except Exception:
-        traceback.print_exc()
         pass
     try:
         result2 = result["updates"][0]
@@ -188,16 +249,27 @@ while True:
             except Exception:
                 userid = result2[3]
                 pass
-            if show_names == 1:
-                try:
-                    profiles = vkapi.users.get(user_id=userid)
-                except Exception:
-                    print "--- User get failed!"
-                    pass
-                print profiles[0]['first_name'] + " " + profiles[0]['last_name']
+            #if show_names == 1:
+            try:
+                profiles = vkapi.users.get(user_id=userid)
+                firstName = profiles[0]['first_name']
+                lastName = profiles[0]['last_name']
+                theName = profiles[0]['first_name'] + " " + profiles[0]['last_name']
+                #print "-------" + theName
+                if database_enable == 1:
+                    database(userid, theName)
+            except Exception:
+                print "--- User get failed!"
+                traceback.print_exc()
+                pass
+            #print profiles[0]['first_name'] + " " + profiles[0]['last_name']
             if str(result2[3])[:3] == "200":
                 chat_id = chatidcheck(result2[3])
             print str(result2[6]).decode("utf-8")
+
+
+
+
             msgcheck(str(result2[6]))
     except Exception:
         pass
