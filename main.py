@@ -18,6 +18,14 @@ vk_access_token = config['vk_token']
 geocodingAPI = config['google_geocoding']
 forecastioAPI = config['forecastio']
 
+helpMessage = (" - Помощь - \n"
+    "test \n"
+    "привет \n"
+    "курс \n"
+    "погода (ГОРОД) \n"
+    "сосчитать (13 * 37) \n"
+    "правда (что-то) \n"
+    )
 
 attempt_id = 0
 chat_id = 0
@@ -42,6 +50,8 @@ def msgcheck(msg):
     if msg.find("test") == 0:
         vk_message = "Рандом: {}".format(str(randint(2,100))) + "%."
         msgsend(userid, vk_message, chat_id)
+    elif msg.find("помощь") == 0:
+        msgsend(userid, helpMessage, chat_id)
     elif msg.find("привет") == 0:
         vk_message = "Привет!" 
         msgsend(userid, vk_message, chat_id)
@@ -97,7 +107,6 @@ def msgcheck(msg):
     elif msg.find("сосчитать") == 0:
         msgCalc = msg.split()
         msgCalc = msgCalc[1:]
-        print "--------" + str(msgCalc)
         try:
             if msgCalc[1] == "+":
                 msgCalcResult = int(msgCalc[0]) + int(msgCalc[2])
