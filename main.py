@@ -11,6 +11,7 @@ import json
 import ast
 import traceback
 import random
+
 try:
     import dataset
     database_enable = 1
@@ -25,6 +26,8 @@ from configobj import ConfigObj
 customMsg = "\n // vk.com/ax3bot ID: "
 show_names = 0 # 1 or 0, disable it for better performance
 blacklist = [1,2,3] # blacklist, VK ID's
+albumID = 203267618
+ownerID = 10399749
 #database_enable = 0  #override database setting
 
 #### Settings
@@ -58,6 +61,7 @@ msg_weather = ["weather", "погода", "Погода"]
 msg_calc = ["calc", "сосчитать", "сч"]
 msg_truth = ["truth", "правда", "Правда"]
 msg_stats = ["stats", "статистика"]
+msg_imagetest = ["image", "имага"]
 
 
 
@@ -119,7 +123,7 @@ def msgcheck(msg):
         msgsend(userid, vk_message, chat_id)
     elif msg in msg_weather:
         if weather_disable == 0:
-            print("got it!")
+            #print("got it!")
             msgGeoSplit = msg.split()
             msgGeoSplit = msgGeoSplit[1:]
             msgGeoString = ' '.join(msgGeoSplit)
@@ -204,15 +208,35 @@ def msgcheck(msg):
         try:
             print("Stats get")
             userStats = table.find_one(vid=userid)
-            vk_message = "Здравствуйте, {}, вы написали {} сообщений с момента включения бота.".format(theName.encode('UTF-8'),userStats["vcount"])
+            vk_message = "Здравствуйте, {}, вы написали {} сообщений с момента включения бота.".format(theName,userStats["vcount"])
             msgsend(userid, vk_message, chat_id)
         except Exception:
             traceback.print_exc()
 
 
+    elif msg in msg_imagetest:
+        try:
+            imagetestContent = uploadImage()
+            vk_message = ""
+            msgsend(userid, vk_message, chat_id, imagetestContent[0]["id"])
+        except:
+            traceback.print_exc()
+
+    #else:
+    #    if chatMode == 2:
 
 
-def msgsend(userid, message, chatid):
+def uploadImage():
+    uploadURL = vkapi.photos.getUploadServer(album_id = albumID)
+    uploadRequest = requests.post(uploadURL["upload_url"], files={"file1": open('photo.jpg', 'rb')})
+    print uploadRequest
+    uploadContent = uploadRequest.json()    
+    uploadSave = vkapi.photos.save(album_id = albumID, server=uploadContent["server"], photos_list=uploadContent["photos_list"], hash=uploadContent["hash"])
+    return uploadSave
+
+
+
+def msgsend(userid, message, chatid, photoID=None):
     try:
         atest = result2[7]["from"]
         try:
@@ -221,8 +245,17 @@ def msgsend(userid, message, chatid):
                 #message = message + customMsg + str(attempt_id)
                 #vkapi.messages.send(chat_id = chat_id, message = message)
             else:
-                message = message + customMsg + str(attempt_id)
-                vkapi.messages.send(chat_id = chat_id, message = message)
+                if photoID != None:
+                    message = message + customMsg + str(attempt_id)
+                    readyphotoID = "photo" + str(ownerID) + "_" + str(photoID)
+                    print(readyphotoID)
+                    vkapi.messages.send(chat_id = chat_id, message = message, attachment=readyphotoID)
+                    #print(str(datetime.now()))
+                else:
+                    message = message + customMsg + str(attempt_id)
+                    print("NO IMAGE")
+                    vkapi.messages.send(chat_id = chat_id, message = message)
+                    #print(str(datetime.now()))
         except Exception:
             #traceback.print_exc()
             pass
@@ -230,6 +263,7 @@ def msgsend(userid, message, chatid):
         try:            
             message = message + customMsg + str(attempt_id)
             vkapi.messages.send(message = message, user_id = userid)
+            #print(str(datetime.now()))
         except Exception:
             #traceback.print_exc()
             pass
@@ -249,6 +283,7 @@ while True:
         urlstring = "http://" + str(asd["server"]) + "?act=a_check&key=" + str(asd["key"]) + "&ts=" + str(asd["ts"]) + "&wait=25&mode=2"
 
         response = requests.get(urlstring).json()
+
 
 
         response = response["updates"][0]
