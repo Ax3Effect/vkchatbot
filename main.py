@@ -7,10 +7,13 @@
 import vk
 import time, threading
 import requests
-import json
+import simplejson as json
 import ast
 import traceback
 import random
+import requests
+#from PIL import Image
+import io
 
 try:
     import dataset
@@ -22,12 +25,20 @@ from datetime import datetime
 from random import randint
 from configobj import ConfigObj
 
+
+
+
+import urllib.request
+
+
+
 #### Settings
 customMsg = "\n // vk.com/ax3bot ID: "
 show_names = 0 # 1 or 0, disable it for better performance
-blacklist = [1,2,3] # blacklist, VK ID's
-albumID = 203267618
-ownerID = 10399749
+blacklist = [1,2,3,4] # blacklist, VK ID's
+chat_blacklist = [] # chat blacklist, VK Chat ID's
+albumID = 203267618 # album for uploading photos, ID
+ownerID = 10399749 # owner ID
 #database_enable = 0  #override database setting
 
 #### Settings
@@ -62,6 +73,7 @@ msg_calc = ["calc", "сосчитать", "сч"]
 msg_truth = ["truth", "правда", "Правда"]
 msg_stats = ["stats", "статистика"]
 msg_imagetest = ["image", "имага"]
+msg_publictest = ["publ", "systest"]
 
 
 
@@ -91,6 +103,9 @@ if database_enable == 1:
             #print "VCOUNT : " + str(user['vcount'])
 
 
+def downloadImage(url):
+    image_name = 'photo.jpg'
+    urllib.request.urlretrieve(url, image_name)
 
 
 
@@ -106,22 +121,22 @@ def msgcheck(msg):
     global attempt_id
     attempt_id = attempt_id + 1 # VK anti-block system
     msg = str(msg)
-    if msg in msg_test:
+    if msg.split(' ')[0] in msg_test:
         vk_message = "Рандом: {}".format(str(randint(2,100))) + "%."
         msgsend(userid, vk_message, chat_id)
-    elif msg in msg_help:
+    elif msg.split(' ')[0] in msg_help:
         msgsend(userid, helpMessage, chat_id)
-    elif msg in msg_hi:
+    elif msg.split(' ')[0] in msg_hi:
         vk_message = "Привет!" 
         msgsend(userid, vk_message, chat_id)
-    elif msg in msg_exchange:
+    elif msg.split(' ')[0] in msg_exchange:
         kurs = requests.get("http://api.fixer.io/latest?base=USD")
         print(kurs.json())
         kursbid1 = kurs.json()["rates"]
         kursbid = kursbid1["GBP"]
         vk_message = "1 dollar = {} pounds".format(kursbid)
         msgsend(userid, vk_message, chat_id)
-    elif msg in msg_weather:
+    elif msg.split(' ')[0] in msg_weather:
         if weather_disable == 0:
             #print("got it!")
             msgGeoSplit = msg.split()
@@ -167,7 +182,7 @@ def msgcheck(msg):
 
             #vk_message = "successful!"
             #msgsend(userid, vk_message, chat_id)
-    elif msg in msg_calc:
+    elif msg.split(' ')[0] in msg_calc:
         msgCalc = msg.split()
         msgCalc = msgCalc[1:]
         try:
@@ -193,7 +208,7 @@ def msgcheck(msg):
         except Exception:
             vk_message = "Неправильный ввод! Пример: 7 + 3, 51 / 3"
             msgsend(userid, vk_message, chat_id)
-    elif msg in msg_truth:
+    elif msg.split(' ')[0] in msg_truth:
         pravdamsg = []
         goodmsg = ["🎱Абсолютно!", "🎱Абсолютно точно!", "🎱Верно!", "🎱Правда!", "🎱Конечно же да!", "🎱Бесспорно.", "🎱Думаю да."]
         neutralmsg = ["🎱Возможно.", "🎱Не уверен.", "🎱Лучше не рассказывать.", "🎱Весьма сомнительно."]
@@ -204,7 +219,7 @@ def msgcheck(msg):
         pravdafinal = random.choice(pravdamsg)
         vk_message = str(pravdafinal)
         msgsend(userid, vk_message, chat_id)
-    elif msg in msg_stats:
+    elif msg.split(' ')[0] in msg_stats:
         try:
             print("Stats get")
             userStats = table.find_one(vid=userid)
@@ -214,7 +229,7 @@ def msgcheck(msg):
             traceback.print_exc()
 
 
-    elif msg in msg_imagetest:
+    elif msg.split(' ')[0] in msg_imagetest:
         try:
             imagetestContent = uploadImage()
             vk_message = ""
@@ -222,14 +237,40 @@ def msgcheck(msg):
         except:
             traceback.print_exc()
 
-    #else:
-    #    if chatMode == 2:
+    elif msg.split(' ')[0] in msg_publictest:
+        try:
+            while True:
+                try:
+                    randomNumber = randint(1, 2000)
+                    wallGet = vkapi.wall.get(domain = "durov", offset = randomNumber, count = 1)
+                    print(wallGet)
+                    wallPhoto2 = wallGet["items"]
+                    wallPhoto3 = wallPhoto2[0]["attachments"]
+                    wallPhoto4 = wallPhoto3[0]["photo"]
+                    wallPhoto5 = wallPhoto4["photo_604"]
+                    print(wallPhoto5)
+                    downloadImage(str(wallPhoto5))
+                    imagetestContent = uploadImage()
+                    vk_message = ""
+                    msgsend(userid, vk_message, chat_id, imagetestContent[0]["id"])
+                except KeyError:
+                    print("No Image found, retrying")
+                    traceback.print_exc()
+                    continue
+                break
+
+            #print(wallPhoto)
+        except Exception:
+            traceback.print_exc()
+            pass
+
+
+
 
 
 def uploadImage():
     uploadURL = vkapi.photos.getUploadServer(album_id = albumID)
     uploadRequest = requests.post(uploadURL["upload_url"], files={"file1": open('photo.jpg', 'rb')})
-    print uploadRequest
     uploadContent = uploadRequest.json()    
     uploadSave = vkapi.photos.save(album_id = albumID, server=uploadContent["server"], photos_list=uploadContent["photos_list"], hash=uploadContent["hash"])
     return uploadSave
@@ -242,38 +283,38 @@ def msgsend(userid, message, chatid, photoID=None):
         try:
             if int(userid) in blacklist:
                 pass
-                #message = message + customMsg + str(attempt_id)
+                #message = "You are banned, Mr." + str(lastName) + "."
                 #vkapi.messages.send(chat_id = chat_id, message = message)
+            elif int(chatid) in chat_blacklist:
+                pass
             else:
                 if photoID != None:
                     message = message + customMsg + str(attempt_id)
                     readyphotoID = "photo" + str(ownerID) + "_" + str(photoID)
                     print(readyphotoID)
                     vkapi.messages.send(chat_id = chat_id, message = message, attachment=readyphotoID)
-                    #print(str(datetime.now()))
                 else:
-                    message = message + customMsg + str(attempt_id)
-                    print("NO IMAGE")
-                    vkapi.messages.send(chat_id = chat_id, message = message)
-                    #print(str(datetime.now()))
+                    if message != "":
+                        message = message + customMsg + str(attempt_id)
+                        vkapi.messages.send(chat_id = chat_id, message = message)
         except Exception:
-            #traceback.print_exc()
+            traceback.print_exc()
             pass
     except KeyError:
         try:            
-            message = message + customMsg + str(attempt_id)
-            vkapi.messages.send(message = message, user_id = userid)
-            #print(str(datetime.now()))
+            if photoID != None:
+                message = message + customMsg + str(attempt_id)
+                readyphotoID = "photo" + str(ownerID) + "_" + str(photoID)
+                vkapi.messages.send(message = message, user_id = userid, attachment=readyphotoID)
+            else:
+                message = message + customMsg + str(attempt_id)
+                vkapi.messages.send(message = message, user_id = userid)
         except Exception:
-            #traceback.print_exc()
             pass
         pass
 
 
-#urlstring = "http://" + str(asd["server"]) + "?act=a_check&key=" + str(asd["key"]) + "&ts=" + str(asd["ts"]) + "&wait=25&mode=2"
-#asd = vkapi.messages.getLongPollServer(use_ssl = 0)
-#аurlstring = "http://" + str(asd["server"]) + "?act=a_check&key=" + str(asd["key"]) + "&ts=" + str(asd["ts"]) + "&wait=25&mode=2"
-print("Connecting...")
+print("Connected!")
 
 while True:
     try:
@@ -291,7 +332,7 @@ while True:
         result2 = response
 
         if connect_success == 0:
-            print("Ax3 Bot successfully connected!")
+            print("Success!")
             connect_success = 1
     except Exception:
         #traceback.print_exc()
