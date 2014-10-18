@@ -11,7 +11,7 @@ import simplejson as json
 import ast
 import traceback
 import random
-import requests
+import re
 #from PIL import Image
 import io
 
@@ -33,7 +33,7 @@ import urllib.request
 
 
 #### Settings
-customMsg = "\n // vk.com/ax3bot ID: "
+customMsg = "\n // vk.com/ax3bot "
 show_names = 0 # 1 or 0, disable it for better performance
 blacklist = [1,2,3,4] # blacklist, VK ID's
 chat_blacklist = [] # chat blacklist, VK Chat ID's
@@ -61,6 +61,8 @@ helpMessage = (" - Помощь - \n"
     "сосчитать (13 * 37) \n"
     "правда (что-то) \n"
     "статистика \n"
+    "баш"
+    "падик"
     )
 
 #### Text messages variables
@@ -74,12 +76,16 @@ msg_truth = ["truth", "правда", "Правда"]
 msg_stats = ["stats", "статистика"]
 msg_imagetest = ["image", "имага"]
 msg_publictest = ["publ", "systest"]
-
+msg_autochatmode1on = ["!мат_вкл"]
+msg_autochatmode1off = ["!мат_выкл"]
+msg_bashorg = ["баш"]
+msg_padik = ["падик"]
 
 
 attempt_id = 0
 chat_id = 0
 weather_disable = 0 
+autoChatMode = 0
 
 connect_success = 0
 
@@ -117,6 +123,7 @@ def chatidcheck(chatcheck):
 	return chatcheckid
 
 def msgcheck(msg):
+    global autoChatMode
     global chat_id
     global attempt_id
     attempt_id = attempt_id + 1 # VK anti-block system
@@ -131,10 +138,12 @@ def msgcheck(msg):
         msgsend(userid, vk_message, chat_id)
     elif msg.split(' ')[0] in msg_exchange:
         kurs = requests.get("http://api.fixer.io/latest?base=USD")
-        print(kurs.json())
         kursbid1 = kurs.json()["rates"]
-        kursbid = kursbid1["GBP"]
-        vk_message = "1 dollar = {} pounds".format(kursbid)
+        kursbid = kursbid1["RUB"]
+        kurs_euro = requests.get("http://api.fixer.io/latest?base=EUR")
+        kursbid1_euro = kurs_euro.json()["rates"]
+        kursbid_euro = kursbid1_euro["RUB"]
+        vk_message = "1 доллар равен {} рублям. \n 1 евро равен {} рублям. ".format(kursbid, kursbid_euro)
         msgsend(userid, vk_message, chat_id)
     elif msg.split(' ')[0] in msg_weather:
         if weather_disable == 0:
@@ -171,7 +180,7 @@ def msgcheck(msg):
                     forecastp2Windspeed = forecastp1["windSpeed"]
                     forecastp2Hum = forecastp1["humidity"]
                     forecastp2Pressure = forecastp1["pressure"]
-                    vk_message = "Погода: {}\nLat: {}, Lng: {} \nhttp://maps.google.co.uk/maps/@{},{},16z \n Температура воздуха: {}°C \n {} \n Скорость ветра: {}м/c \n Влажность: {}% \n Давление: {}".format(msgGeoString, geoLat, geoLng, geoLat, geoLng, forecastp2, forecastp2Summary, forecastp2Windspeed, forecastp2Hum*100, forecastp2Pressure)
+                    vk_message = "Погода: {}\nLat: {}, Lng: {} \nhttp://maps.google.co.uk/maps/@{},{},16z \n Температура воздуха: {}°C \n {} \n Скорость ветра: {}м/c \n Влажность: {}% \n Давление: {} мм. рт. ст.".format(msgGeoString, geoLat, geoLng, geoLat, geoLng, forecastp2, forecastp2Summary, forecastp2Windspeed, forecastp2Hum*100, forecastp2Pressure)
                     msgsend(userid, vk_message, chat_id)
 
                 else:
@@ -242,7 +251,7 @@ def msgcheck(msg):
             while True:
                 try:
                     randomNumber = randint(1, 2000)
-                    wallGet = vkapi.wall.get(domain = "durov", offset = randomNumber, count = 1)
+                    wallGet = vkapi.wall.get(domain = "funny_mems_dota2", offset = randomNumber, count = 1)
                     print(wallGet)
                     wallPhoto2 = wallGet["items"]
                     wallPhoto3 = wallPhoto2[0]["attachments"]
@@ -261,8 +270,63 @@ def msgcheck(msg):
 
             #print(wallPhoto)
         except Exception:
-            traceback.print_exc()
+            #traceback.print_exc()
             pass
+    elif msg.split(' ')[0] in msg_autochatmode1on:
+        autoChatMode = 1
+        vk_message = "// Мат включен."
+        msgsend(userid, vk_message, chat_id)
+    elif msg.split(' ')[0] in msg_autochatmode1off:
+        autoChatMode = 0
+        vk_message = "// Мат выключен."
+        msgsend(userid, vk_message, chat_id)
+
+
+    elif msg.split(' ')[0] in msg_bashorg:
+        
+        bashorg_site= "http://bash.im/random"
+        hdr = {'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.11 (KHTML, like Gecko) Chrome/23.0.1271.64 Safari/537.11',
+               'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+               'Accept-Charset': 'ISO-8859-1,utf-8;q=0.7,*;q=0.3',
+               'Accept-Encoding': 'none',
+               'Accept-Language': 'en-US,en;q=0.8'}
+
+        req = urllib.request.Request(bashorg_site, headers=hdr)
+        raw_text = urllib.request.urlopen(req).read().decode('cp1251')
+
+        parser = re.compile(r'<div class="text">(.*?)</div>')
+        quotes_iter = parser.finditer(raw_text)
+        quotes_iter = list(quotes_iter)
+        quote = quotes_iter[0]
+        text = quote.group(1).replace('<br>', '\n').replace('&amp;', '&').replace('&quot;', '"').replace('&gt;', '>').replace('&lt;', '<')
+        vk_message = text
+        msgsend(userid, vk_message, chat_id)
+
+    elif msg.split(' ')[0] in msg_padik:
+        randomNumber = randint(1, 20000)
+        wallGet = vkapi.wall.get(domain = "pad_iks", offset = randomNumber, count = 1)
+        #print(wallGet)
+        wallPhoto2 = wallGet["items"]
+        wallPhoto3 = wallPhoto2[0]["text"]
+        if wallPhoto3 != "":
+            vk_message = wallPhoto3
+            msgsend(userid, vk_message, chat_id)
+
+    else:
+        
+        if autoChatMode == 1:
+            try:
+                huifURL = "http://huifikator.ru/api.php?text=" + str(msg)
+                huifGet = requests.get(huifURL)
+                huifGet = huifGet.text
+                print(huifGet)
+                vk_message = huifGet
+                msgsend(userid, vk_message, chat_id)
+            except Exception:
+                traceback.print_exc()
+                pass
+            #traceback.print_exc()
+
 
 
 
@@ -289,16 +353,16 @@ def msgsend(userid, message, chatid, photoID=None):
                 pass
             else:
                 if photoID != None:
-                    message = message + customMsg + str(attempt_id)
+                    message = message + customMsg
                     readyphotoID = "photo" + str(ownerID) + "_" + str(photoID)
                     print(readyphotoID)
                     vkapi.messages.send(chat_id = chat_id, message = message, attachment=readyphotoID)
                 else:
                     if message != "":
-                        message = message + customMsg + str(attempt_id)
+                        message = message + customMsg
                         vkapi.messages.send(chat_id = chat_id, message = message)
         except Exception:
-            traceback.print_exc()
+            #traceback.print_exc()
             pass
     except KeyError:
         try:            
@@ -318,19 +382,11 @@ print("Connected!")
 
 while True:
     try:
-
         asd = vkapi.messages.getLongPollServer(use_ssl = 0)
-
         urlstring = "http://" + str(asd["server"]) + "?act=a_check&key=" + str(asd["key"]) + "&ts=" + str(asd["ts"]) + "&wait=25&mode=2"
-
         response = requests.get(urlstring).json()
-
-
-
         response = response["updates"][0]
-
         result2 = response
-
         if connect_success == 0:
             print("Success!")
             connect_success = 1
@@ -360,11 +416,10 @@ while True:
             if str(result2[3])[:3] == "200":
                 chat_id = chatidcheck(result2[3])
             print(str(result2[6]))
-
-
-
-
             msgcheck(str(result2[6]))
     except Exception:
         #traceback.print_exc()
+        ## ONLY DEBUG
+        #vk_message = traceback.print_exc()
+        #msgsend(userid, vk_message, chat_id)
         pass
