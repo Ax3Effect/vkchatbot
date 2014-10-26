@@ -187,7 +187,7 @@ def msgcheck(msg):
                     vk_message = "Не знаю такого места!"
                     msgsend(userid, vk_message, chat_id)
 
-
+#
 
             #vk_message = "successful!"
             #msgsend(userid, vk_message, chat_id)
