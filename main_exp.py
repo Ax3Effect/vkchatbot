@@ -98,13 +98,13 @@ import urllib.request
 
 
 #### Settings
-customMsg = "\n"
+customMsg = "Всего запросов: "
 show_names = 0 # 1 or 0, disable it for better performance
 blacklist = [1,2,3,4] # blacklist, VK ID's
 chat_blacklist = [] # chat blacklist, VK Chat ID's
 albumID = 203267618 # album for uploading photos, ID
 ownerID = 10399749 # owner ID
-controlID = 10399749
+controlID = 10399749 # admin ID
 #database_enable = 0  #override database setting
 
 #### Settings
@@ -112,42 +112,41 @@ controlID = 10399749
 #### Config files
 config = ConfigObj("settings.ini")
 vk_access_token = config['vk_token']
-geocodingAPI = config['google_geocoding']
 forecastioAPI = config['forecastio']
 #### Config files
 
 print("Initializing...")
 
 #### Help messages
-helpMessage = (" - Помощь - \n"
-    "test \n"
+helpMessage = (" - Помощь по командам - \n"
+    "тест \n"
     "привет \n"
     "курс \n"
-    "погода (ГОРОД) \n"
+    "погода [город] \n"
     "сосчитать (13 * 37) \n"
-    "правда (что-то) \n"
+    "правда [ваш вопрос] \n"
     "статистика \n"
-    "баш"
-    "падик"
+    "баш \n"
+    "падик \n\n"
     )
 
 #### Text messages variables
-msg_test = ["test", "тест"]
-msg_help = ["help", "помощь"]
-msg_hi = ["hi", "привет"]
-msg_exchange = ["курс", "exchange", "rates"]
+msg_test = ["test", "тест", "Тест"]
+msg_help = ["help", "помощь", "Помощь"]
+msg_hi = ["hi", "привет", "Привет"]
+msg_exchange = ["exchange", "rates", "курс", "Курс"]
 msg_weather = ["weather", "погода", "Погода"]
-msg_calc = ["calc", "сосчитать", "сч"]
+msg_calc = ["calc", "сосчитать", "Сосчитать"]
 msg_truth = ["truth", "правда", "Правда"]
-msg_stats = ["stats", "статистика"]
-msg_imagetest = ["image", "имага"]
+msg_stats = ["stats", "статистика", "Cтатистика"]
+msg_imagetest = ["image", "имага", "Имага"]
 msg_publictest = ["publ", "systest"]
-msg_autochatmode1on = ["!мат_вкл"]
-msg_autochatmode1off = ["!мат_выкл"]
-msg_bashorg = ["баш"]
-msg_padik = ["падик"]
-msg_reddittop = ["r"]
-msg_img = ["время"]
+msg_autochatmode1on = ["swear_on", "мат_вкл"]
+msg_autochatmode1off = ["swear_off", "мат_выкл"]
+msg_bashorg = ["bash", "баш", "Баш", "башорг"]
+msg_padik = ["ghetto", "падик", "Падик"]
+msg_reddittop = ["reddit", "r", "реддит", "Реддит"]
+msg_img = ["time", "время", "Время"]
 
 
 attempt_id = 0
@@ -212,12 +211,12 @@ def msgcheck(msg):
     msg = str(msg)
     msg = msg.lower()
     if msg.split(' ')[0] in msg_test:
-        vk_message = "Рандом: {}".format(str(randint(2,100))) + "%."
+        vk_message = "Вы ввели тестовую команду\n Рандом: {}".format(str(randint(2,100))) + "%."
         msgsend(userid, vk_message, chat_id)
     elif msg.split(' ')[0] in msg_help:
         msgsend(userid, helpMessage, chat_id)
     elif msg.split(' ')[0] in msg_hi:
-        vk_message = "Привет!" 
+        vk_message = "Привет!\n Напиши мне слово помощь, чтобы узнать список команд." 
         msgsend(userid, vk_message, chat_id)
     elif msg.split(' ')[0] in msg_exchange:
         kurs = requests.get("http://api.fixer.io/latest?base=USD")
@@ -226,7 +225,7 @@ def msgcheck(msg):
         kurs_euro = requests.get("http://api.fixer.io/latest?base=EUR")
         kursbid1_euro = kurs_euro.json()["rates"]
         kursbid_euro = kursbid1_euro["RUB"]
-        vk_message = "1 доллар равен {} рублям. \n 1 евро равен {} рублям. ".format(kursbid, kursbid_euro)
+        vk_message = "1 Доллар = {} Рублям. \n 1 Евро = {} Рублям.".format(kursbid, kursbid_euro)
         msgsend(userid, vk_message, chat_id)
     elif msg.split(' ')[0] in msg_weather:
         if weather_disable == 0:
@@ -235,11 +234,11 @@ def msgcheck(msg):
             msgGeoSplit = msgGeoSplit[1:]
             msgGeoString = ' '.join(msgGeoSplit)
             if msgGeoString == "":
-                vk_message = "Описание:\n погода (город)"
+                vk_message = "⚠ Используй:\n погода [город]"
                 msgsend(userid, vk_message, chat_id)
             else:
                 print(msgGeoString)
-                geocodeURL = "https://maps.googleapis.com/maps/api/geocode/json?address={}&key={}".format(msgGeoString, geocodingAPI)
+                geocodeURL = "https://maps.googleapis.com/maps/api/geocode/json?address={}&sensor=false&language=ru".format(msgGeoString)
                 print(geocodeURL)
                 geocodeRequest = requests.get(geocodeURL)
                 geoResult2 = geocodeRequest.json()
@@ -263,11 +262,11 @@ def msgcheck(msg):
                     forecastp2Windspeed = forecastp1["windSpeed"]
                     forecastp2Hum = forecastp1["humidity"]
                     forecastp2Pressure = forecastp1["pressure"]
-                    vk_message = "Погода: {}\nLat: {}, Lng: {} \nhttp://maps.google.co.uk/maps/@{},{},16z \n Температура воздуха: {}°C \n {} \n Скорость ветра: {}м/c \n Влажность: {}% \n Давление: {} мм. рт. ст.".format(msgGeoString, geoLat, geoLng, geoLat, geoLng, forecastp2, forecastp2Summary, forecastp2Windspeed, forecastp2Hum*100, forecastp2Pressure)
+                    vk_message = "Погода: {}\nLat: {}, Lng: {} \nhttps://www.google.ru/maps/@{},{},16z \n Температура воздуха: {}°C \n {} \n Скорость ветра: {}м/c \n Влажность: {}% \n Давление: {} мм. рт. ст.".format(msgGeoString, geoLat, geoLng, geoLat, geoLng, forecastp2, forecastp2Summary, forecastp2Windspeed, forecastp2Hum*100, forecastp2Pressure)
                     msgsend(userid, vk_message, chat_id)
 
                 else:
-                    vk_message = "Не знаю такого места!"
+                    vk_message = "⚠ Такой город не найден!"
                     msgsend(userid, vk_message, chat_id)
 
 
@@ -295,10 +294,10 @@ def msgcheck(msg):
                 vk_message = "Результат: {}".format(msgCalcResult)
                 msgsend(userid, vk_message, chat_id)
             else:
-                vk_message = "Неправильный ввод! Вы ввели: " + str(msg)
+                vk_message = "⚠ Неправильный ввод! Вы ввели: " + str(msg)
                 msgsend(userid, vk_message, chat_id)
         except Exception:
-            vk_message = "Неправильный ввод! Пример: 7 + 3, 51 / 3"
+            vk_message = "⚠ Неправильный ввод! Пример: 7 + 3, 51 / 3"
             msgsend(userid, vk_message, chat_id)
     elif msg.split(' ')[0] in msg_truth:
         pravdamsg = []
@@ -315,7 +314,7 @@ def msgcheck(msg):
         try:
             print("Stats get")
             userStats = table.find_one(vid=userid)
-            vk_message = "Здравствуйте, {}, вы написали {} сообщений с момента включения бота.".format(theName,userStats["vcount"])
+            vk_message = "Здравствуйте, {}, вы сделали {} запросов с момента включения бота.".format(theName,userStats["vcount"])
             msgsend(userid, vk_message, chat_id)
         except Exception:
             traceback.print_exc()
@@ -360,16 +359,10 @@ def msgcheck(msg):
             autoChatMode = 1
             vk_message = "// Мат включен."
             msgsend(userid, vk_message, chat_id)
-        else:
-            vk_message = "// Ты кто такой вообще?"
-            msgsend(userid, vk_message, chat_id)
     elif msg.split(' ')[0] in msg_autochatmode1off:
         if int(userid) == int(controlID):
             autoChatMode = 0
             vk_message = "// Мат выключен."
-            msgsend(userid, vk_message, chat_id)
-        else:
-            vk_message = "// Ты кто такой вообще?"
             msgsend(userid, vk_message, chat_id)
 
 
@@ -554,13 +547,13 @@ def msgsend(userid, message, chatid, photoID=None):
                 pass
             else:
                 if photoID != None:
-                    message = message + customMsg
+                    message = message + "\n\n" + customMsg + str(attempt_id)
                     readyphotoID = "photo" + str(ownerID) + "_" + str(photoID)
                     print(readyphotoID)
                     vkapi.messages.send(chat_id = chat_id, message = message, attachment=readyphotoID)
                 else:
                     if message != "":
-                        message = message + customMsg
+                        message = message + "\n\n" + customMsg + str(attempt_id)
                         vkapi.messages.send(chat_id = chat_id, message = message)
         except Exception:
             #traceback.print_exc()
@@ -568,14 +561,11 @@ def msgsend(userid, message, chatid, photoID=None):
     except KeyError:
         try:            
             if photoID != None:
-                #
-                #message = message + customMsg + str(attempt_id)
-                message = message + customMsg
+                message = message + "\n\n" + customMsg + str(attempt_id)
                 readyphotoID = "photo" + str(ownerID) + "_" + str(photoID)
                 vkapi.messages.send(message = message, user_id = userid, attachment=readyphotoID)
             else:
-                #message = message + customMsg + str(attempt_id)
-                message = message + customMsg
+                message = message + "\n\n" + customMsg + str(attempt_id)
                 vkapi.messages.send(message = message, user_id = userid)
         except Exception:
             pass
@@ -623,7 +613,7 @@ while True:
             msgcheck(str(result2[6]))
     except vk.api.VkAPIMethodError:
         traceback.print_exc()
-        vk_message = "⚠ ОШИБКА СТОП НОЛЬНОЛЬНОЛЬДЕВЯТЬ: Загрузка фото не удалась."
+        vk_message = "⚠ Загрузка фото не удалась."
         msgsend(userid, vk_message, chat_id)
     except Exception:
         traceback.print_exc()
