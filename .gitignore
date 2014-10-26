@@ -1,9 +1,3 @@
-settings.ini
-vk.db
-vkcount.db
-vkcount2.db
-main.py.bak
-mainpython2.py
-photo.jpg
-main_test.py
-asdfsadf
+*
+!baza1.txt
+!main.py
