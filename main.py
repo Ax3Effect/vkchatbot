@@ -5,7 +5,7 @@
 
 # --------------- EXPERIMENTAL -------------
 
-
+#https://oauth.vk.com/authorize?client_id=4379184&scope=notify,friends,photos,audio,video,docs,notes,pages,status,wall,groups,messages,notifications,stats,offline,nohttps&redirect_uri=http://vk.com&display=page&v=5.26&%20response_type=token
 
 # Main Modules
 import vk
@@ -17,11 +17,12 @@ import traceback
 import re
 import urllib.request
 import io
+import glob
 from datetime import datetime
 from time import strftime
 from random import randint
 from configobj import ConfigObj
-
+import random
 # Secondary Modules
 try:
     from ReddiWrap import ReddiWrap
@@ -63,12 +64,12 @@ except ImportError:
 
 
 #### Settings
-customMsg = "ID: "
+customMsg = ""
 show_names = 0 # 1 or 0, disable it for better performance
 blacklist = [1,2,3,4] # blacklist, VK ID's
-chat_blacklist = [] # chat blacklist, VK Chat ID's
-albumID = 203267618 # album for uploading photos, ID
-ownerID = 10399749 # owner ID
+chat_blacklist = [81] # chat blacklist, VK Chat ID's
+albumID = 206225561 # album for uploading photos, ID
+ownerID = 277044695 # owner ID
 controlID = 10399749 # admin ID
 #database_enable = 0  #override database setting
 
@@ -92,7 +93,10 @@ helpMessage = (" - Помощь по командам - \n"
     "правда [ваш вопрос] \n"
     "статистика \n"
     "баш \n"
-    "падик \n\n"
+    "падик \n"
+    "reddit\n"
+    "время\n"
+    "аудио\n"
     )
 
 #### Text messages variables
@@ -105,7 +109,7 @@ msg_calc = ["calc", "сосчитать", "Сосчитать"]
 msg_truth = ["truth", "правда", "Правда"]
 msg_stats = ["stats", "статистика", "Cтатистика"]
 msg_imagetest = ["image", "имага", "Имага"]
-msg_publictest = ["publ", "systest"]
+msg_publictest = ["мемы", "memes"]
 msg_autochatmode1on = ["swear_on", "мат_вкл"]
 msg_autochatmode1off = ["swear_off", "мат_выкл"]
 msg_bashorg = ["bash", "баш", "Баш", "башорг"]
@@ -114,6 +118,9 @@ msg_reddittop = ["reddit", "r", "реддит", "Реддит"]
 msg_img = ["time", "время", "Время"]
 msg_chatmode = ["чатмод"]
 msg_vkaudio = ["аудио", "audio"]
+msg_blacklistadd = ["!blacklist_add"]
+msg_countcheck = ["колво"]
+msg_imagepack = ["пак"]
 
 #### Variables
 attempt_id = 0
@@ -136,6 +143,32 @@ asd = vkapi.messages.getLongPollServer(use_ssl = 0)
 
 
 # -------- Answer Functions -------
+
+def emoji():
+    hat = "🎩 🎩 👑 👒 💛 💙 ☁ 💡 📪 💕 ⚡ ☔ ❄ ⛄ 💭"
+    hat = hat.split()
+    face = "😄 😃 😀 😊 ☺ 😉 😍 😘 😚 😗 😙 😜 😝 😛 😳 😁 😔 😌 😒 😞 😣 😢 😂 😭 😪 😥 😰 😅 😓 😩 😫 😨 😱 😠 😡 😤 😖 😆 😋 😷 😎 😴 😵 😲 😟 😦 😧 😈 👿 😮 😬 😐 😕 😯 😶 😇 😏 😑 👲 👳 👮 👷 💂 👶 👦 👧 👨 👩 👴 👵 👱 👼 🐶 🐺 🐱 🐭 🐹 🐰 🐸 🐯 🐨 🐻 🐷 🐮 🐵 🐼 🐧 🐦 🐤 🐥 🐣 🐔 🐓 🙉 🙊 💀 👽 💩"
+    face = face.split()
+    body = "👕 👔 👚 👗 🎽 👖 👘 👙"
+    body = body.split()
+    hand = "🍪 📱 ☎ 📞 🎥 📷 📹 🏈 🚬 🏀 ⚽ ⚾ 🎾 🎱 🏉 ☕ 🍵 🍶 🍼 🍺 🍻 🍸 🍹 🍷 🍴 🍕 🍔 🍟 🍗 🍖 🍝 🍛 🍤 🍱 🍣 🍥 🍙 🍘 🍚 🍜 🍲 🍢 🍡 🍳 👍 👎 👌 👊 ✊ ✌ 👋 ✋ 👐 🙌 🙏 ☝ 👏 💪 "
+    hand = hand.split()
+    shoes = "👡 👠 👡 👟 👞 👢"
+    shoes = shoes.split()
+
+    hat = random.choice(hat)
+    face = random.choice(face)
+    body = random.choice(body)
+    lhand = random.choice(hand)
+    rhand = random.choice(hand)
+    shoes = random.choice(shoes)
+
+    finalResult1 = "   {}  \n".format(hat)
+    finalResult2 = "   {}  \n".format(face)
+    finalResult3 = "{}{}{}\n".format(lhand,body,rhand)
+    finalResult4 = "  {}{} \n".format(shoes,shoes)
+    finalResult = finalResult1 + finalResult2 + finalResult3 + finalResult4
+    return finalResult
 
 def padik():
     randomNumber = randint(40000, 700000)
@@ -198,6 +231,7 @@ def downloadImage(url):
     image_name = 'photo.jpg'
     urllib.request.urlretrieve(url, image_name)
 
+
 if database_enable == 1:
     def database(vid, vname):
         db = dataset.connect('sqlite:///vkcount2.db')
@@ -216,6 +250,30 @@ if database_enable == 1:
         #for user in db['user']:
             #print "ID : " + str(user['vid']) 
             #print "VCOUNT : " + str(user['vcount'])
+
+
+
+# Friends add function
+def friendsAdd():
+    getRequests = vkapi.friends.getRequests()
+    for eachFriend in getRequests["items"]:
+        print("Added " + str(eachFriend) + " as a friend")
+        vkapi.friends.add(user_id = eachFriend)
+    time.sleep(70)
+
+
+
+t = threading.Thread(target = friendsAdd)
+t.start()
+
+
+
+
+   
+
+
+
+
 
 # ---------- Message Check Function --------
 
@@ -243,7 +301,10 @@ def msgcheck(msg):
         kurs_euro = requests.get("http://api.fixer.io/latest?base=EUR")
         kursbid1_euro = kurs_euro.json()["rates"]
         kursbid_euro = kursbid1_euro["RUB"]
-        vk_message = "1 Доллар = {} Рублям. \n 1 Евро = {} Рублям.".format(kursbid, kursbid_euro)
+        kurs_gbp = requests.get("http://api.fixer.io/latest?base=GBP")
+        kursbid1_gbp = kurs_gbp.json()["rates"]
+        kursbid_gbp = kursbid1_gbp["RUB"]
+        vk_message = "1 Доллар = {} руб. \n 1 Евро = {} руб. \n 1 Фунт = {} руб".format(kursbid, kursbid_euro, kursbid_gbp)
         msgsend(userid, vk_message, chat_id)
     elif msg.split(' ')[0] in msg_weather:
         if weather_disable == 0:
@@ -337,15 +398,30 @@ def msgcheck(msg):
             imagetestContent = uploadImage()
             vk_message = ""
             msgsend(userid, vk_message, chat_id, imagetestContent[0]["id"])
-        except:
+        except Exception:
             traceback.print_exc()
+
+    elif msg.split(' ')[0] in msg_imagepack:
+        try:
+            listt = []
+            for onlyfiles in glob.glob("/Volumes/Ax3 HD/Python/archive/*.jpg"):
+                listt.append(onlyfiles)
+            #print(listt)
+            imagetestContent = uploadImageNew(random.choice(listt))
+            vk_message = ""
+            msgsend(userid, vk_message, chat_id, imagetestContent[0]["id"])
+        except Exception:
+            traceback.print_exc()
+
+
+
 
     elif msg.split(' ')[0] in msg_publictest:
         try:
             while True:
                 try:
                     randomNumber = randint(1, 2000)
-                    wallGet = vkapi.wall.get(domain = "funny_mems_dota2", offset = randomNumber, count = 1)
+                    wallGet = vkapi.wall.get(domain = "funysmsaifon", offset = randomNumber, count = 1)
                     print(wallGet)
                     wallPhoto2 = wallGet["items"]
                     wallPhoto3 = wallPhoto2[0]["attachments"]
@@ -468,8 +544,19 @@ def msgcheck(msg):
         if imageEdit_enable == 1:
             imgText()
 
+    elif msg.split(' ')[0] in msg_countcheck:
+        countCheck = vkapi.messages.getHistory(chat_id = chat_id, offset = 0, count = 1, rev = 0)
+        vk_message = "Всего в этой конференции: " + str(countCheck["count"]) + " сообщений с момента вступления в конференцию. "
+        msgsend(userid, vk_message, chat_id)
+
+    elif msg.split(' ')[0] in msg_blacklistadd:
+        if userid == ownerID:
+            pass
+
+ 
     else:
         if autoChatMode == 1:
+            #Huificator
             try:
                 huifURL = "http://huifikator.ru/api.php?text=" + str(msg)
                 huifGet = requests.get(huifURL)
@@ -481,8 +568,10 @@ def msgcheck(msg):
                 traceback.print_exc()
                 pass
         elif autoChatMode == 2:
+            #Padik
             padik()
         elif autoChatMode == 3:
+            #Answer Base
             if answerBase_enable == 1:
                 msg = msg.replace('?', '')
                 for q, a in dictionary.items():
@@ -490,6 +579,19 @@ def msgcheck(msg):
                         print(a)
                         vk_message = a
                         msgsend(userid, vk_message, chat_id)
+        elif autoChatMode == 4:
+            #Wipe
+            vk_message = "\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n."
+            msgsend(userid, vk_message, chat_id)
+
+        elif autoChatMode == 5:
+            #Specific message
+            vk_message = "asdasd"
+            msgsend(userid, vk_message, chat_id)
+        elif autoChatMode == 6:
+            #Emoji
+            vk_message = emoji()
+            msgsend(userid, vk_message, chat_id)
 
 
 def uploadImage():
@@ -497,6 +599,14 @@ def uploadImage():
     uploadRequest = requests.post(uploadURL["upload_url"], files={"file1": open('photo.jpg', 'rb')})
     uploadContent = uploadRequest.json()    
     uploadSave = vkapi.photos.save(album_id = albumID, server=uploadContent["server"], photos_list=uploadContent["photos_list"], hash=uploadContent["hash"])
+    return uploadSave
+
+def uploadImageNew(path):
+    uploadURL = vkapi.photos.getUploadServer(album_id = albumID)
+    uploadRequest = requests.post(uploadURL["upload_url"], files={"file1": open(path, 'rb')})
+    uploadContent = uploadRequest.json()    
+    uploadSave = vkapi.photos.save(album_id = albumID, server=uploadContent["server"], photos_list=uploadContent["photos_list"], hash=uploadContent["hash"])
+    print("Uploading success")
     return uploadSave
 
 
@@ -513,7 +623,7 @@ def msgsend(userid, message, chatid, photoID=None, audioID=None):
                 pass
             else:
                 if photoID != None:
-                    message = message + "\n\n" + customMsg + str(attempt_id)
+                    message = message + "\n\n" + customMsg
                     readyphotoID = "photo" + str(ownerID) + "_" + str(photoID)
                     print(readyphotoID)
                     vkapi.messages.send(chat_id = chat_id, message = message, attachment=readyphotoID)
@@ -523,7 +633,8 @@ def msgsend(userid, message, chatid, photoID=None, audioID=None):
                     vkapi.messages.send(chat_id = chat_id, message = message, attachment=audioID)
                 else:
                     if message != "":
-                        message = message + "\n\n" + customMsg + str(attempt_id)
+                        message = message + "\n\n" + customMsg
+                        #message = message + "\n\n" + customMsg + str(attempt_id)
                         vkapi.messages.send(chat_id = chat_id, message = message)
         except Exception:
             #traceback.print_exc()
@@ -540,7 +651,8 @@ def msgsend(userid, message, chatid, photoID=None, audioID=None):
                 message = message + customMsg
                 vkapi.messages.send(message = message, user_id = userid, attachment=audioID)
             else:
-                message = message + "\n\n" + customMsg + str(attempt_id)
+                message = message + "\n\n" + customMsg
+                #message = message + "\n\n" + customMsg + str(attempt_id)
                 vkapi.messages.send(message = message, user_id = userid)
         except Exception:
             pass
@@ -548,6 +660,7 @@ def msgsend(userid, message, chatid, photoID=None, audioID=None):
 
 
 print("Connected!")
+
 
 while True:
     try:
