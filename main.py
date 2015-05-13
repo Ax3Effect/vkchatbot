@@ -90,6 +90,9 @@ import random
 import xml.etree.ElementTree as ET
 import subprocess
 from io import StringIO
+
+print("VK Chat Bot от Ax3 (vk.com/ax3effect)")
+
 # Secondary Modules
 try:
     print("Initializing ReddiWrap...  ", end="")
@@ -360,15 +363,14 @@ except Exception:
     answerBase_enable = 0
 
 def chatidcheck(chatcheck):
-    if str(chatcheck)[-3:][0] == 0:
-        chatcheckid = str(chatcheck)[-2:]
-        #print(chatcheckid)
-        return chatcheckid
-    else:
-        chatcheckid = str(chatcheck)[-3:]
-        #print(chatcheckid)
-
-        return chatcheckid
+    chatcheck = str(chatcheck)[1:]
+    counter = 0
+ 
+    for i in list(chatcheck):
+        print("i = " + str(i))
+        counter = counter + 1
+        if i != "0":
+            return chatcheck[int(counter-1):]
 
 def downloadImage(url):
     image_name = 'photo.jpg'
@@ -1012,7 +1014,6 @@ def msgsend(userid, message, chatid, photoID=None, audioID=None, forwardID=None)
         pass
 
 
-print("Connected!")
 
 asd = vkapi.messages.getLongPollServer(use_ssl = 0) # getting all info for connection
 ts = asd["ts"] # ts parameter for first msg getting
@@ -1022,15 +1023,13 @@ while True:
     try:
         urlstring = "http://" + str(asd["server"]) + "?act=a_check&key=" + str(asd["key"]) + "&ts=" + str(ts) + "&wait=25&mode=2"
         response = requests.get(urlstring).json()
-        print(response)
         ts = response["ts"] # ts for next request
         response = response["updates"][0] 
         result2 = response
         if connect_success == 0:
-            print("Success!")
+            print("Successfully connected to VK message server 😎")
             connect_success = 1
     except Exception:
-        traceback.print_exc()
         pass
     try:
         
@@ -1042,7 +1041,7 @@ while True:
                 pass
 
 
-            if userid == ownerID: #duplicate
+            if int(userid) == int(ownerID): #duplicate
                 pass
             else:
                 #if show_names == 1:
