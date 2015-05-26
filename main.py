@@ -367,7 +367,6 @@ def chatidcheck(chatcheck):
     counter = 0
  
     for i in list(chatcheck):
-        print("i = " + str(i))
         counter = counter + 1
         if i != "0":
             return chatcheck[int(counter-1):]
@@ -465,6 +464,9 @@ def changeText():
 
 
 # ---------- Message Check Function --------
+
+
+
 
 def msgcheck(msg, id=None):
     global autoChatMode
@@ -1075,6 +1077,7 @@ while True:
                         msgToSend = ' '.join(mesSplit[1:])
                         msgcheck(msgToSend)
                 else:
+                    #testt(str(result2[6]))
                     msgcheck(str(result2[6]), str(result2[1]))
     except vk.api.VkAPIMethodError:
         traceback.print_exc()
