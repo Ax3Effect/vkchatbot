@@ -1,4 +1,6 @@
 *
-!baza1.txt
 !main.py
 !LICENSE.txt
+!plugins/
+!textFile.txt
+!settings_example.ini
