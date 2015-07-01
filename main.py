@@ -348,7 +348,7 @@ def msgsend(userid, message, chatid, photoID=None, audioID=None, forwardID=None)
                 pass
             else:
                 if photoID != None:
-                    message = message + "\n\n" + customMsg
+                    message = message + "\n\n" 
                     #readyphotoID = "photo" + str(ownerID) + "_" + str(photoID)
                     #print(readyphotoID)
                     readyphotoID = photoID
@@ -362,7 +362,7 @@ def msgsend(userid, message, chatid, photoID=None, audioID=None, forwardID=None)
                     vkapi.messages.send(chat_id = chat_id, message = message, attachment=audioID)
                 else:
                     if message != "":
-                        message = message + "\n\n" + customMsg
+                        message = message + "\n\n" 
                         #message = message + "\n\n" + customMsg + str(attempt_id)
                         if forwardID == None:
                             vkapi.messages.send(chat_id = chat_id, message = message)

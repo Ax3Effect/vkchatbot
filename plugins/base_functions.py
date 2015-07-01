@@ -14,6 +14,7 @@ import requests
 def init():
     try:
         global textFiles
+        global textFileUnavailable
         with open('textFile.txt', encoding="utf-8") as f:
             textFiles = f.readlines()
         textFileUnavailable = False
