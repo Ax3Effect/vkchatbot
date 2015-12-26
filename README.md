@@ -1,4 +1,4 @@
-python-vkbot
+python-vkchatbot - Чат бот для ВКонтакте
 ============
 
 README
