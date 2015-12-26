@@ -1,0 +1,4 @@
+configobj == 5.0.6
+requests == 2.8.1
+SQLAlchemy == 0.9.7
+vk == 2.0.2
