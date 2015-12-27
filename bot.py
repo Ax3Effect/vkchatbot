@@ -389,7 +389,7 @@ class Cmd(object):
                                     vkapi.send(msg)
 
                                 if response["updates"][0][7]["source_act"] == "chat_title_update":
-                                    msg = {"message":"Классное название! ".format(self.db.first_name),
+                                    msg = {"message":"Классное название, {}! ".format(self.db.first_name),
                                     "chat_id":self.group_id,
                                     "from":self.uid
                                     }
