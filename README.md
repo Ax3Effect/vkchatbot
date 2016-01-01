@@ -10,6 +10,7 @@ Python 2/3
 - pip install requests
 - pip install configobj
 - pip install sqlalchemy
+- pip install dogpile.cache
 
 
 Гайд
@@ -82,6 +83,7 @@ Requirements:
 * requests (pip install requests)
 * configobj (pip install configobj)
 * sqlalchemy (pip install sqlalchemy)
+* dogpile.cache (pip install dogpile.cache)
 
 Also you need to provide access_token (you can find out more at https://vk.com/dev/auth_mobile )
 And you need to provide "settings.ini" file with "vk_token" on it, like:
