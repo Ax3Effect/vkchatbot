@@ -8,6 +8,7 @@ Python 2/3
 Необходимые модули:
 - pip install vk
 - pip install requests
+- pip install requests-futures
 - pip install configobj
 - pip install sqlalchemy
 - pip install dogpile.cache
@@ -84,6 +85,7 @@ Requirements:
 * configobj (pip install configobj)
 * sqlalchemy (pip install sqlalchemy)
 * dogpile.cache (pip install dogpile.cache)
+* requests-futures (pip install requests-futures)
 
 Also you need to provide access_token (you can find out more at https://vk.com/dev/auth_mobile )
 And you need to provide "settings.ini" file with "vk_token" on it, like:
