@@ -2,17 +2,25 @@
 # VK Chat bot by Nazar K. https://vk.com/ax3effect
 
 import vk
+try:
+    import configparser as ConfigParser
+except ImportError:
+    import ConfigParser
 
 import requests
-from configobj import ConfigObj
 from sqlalchemy.orm import sessionmaker
 import db
 from db import User, Namecases, Messages
+
+try:
+    from queue import Queue
+except ImportError:
+    print("[ERROR] Please use Python 3")
 from caching_query import FromCache
 import threading
 from pprint import pprint
 import time
-from queue import Queue
+
 import random
 from sqlalchemy import desc
 import re
@@ -76,12 +84,12 @@ class VK(object):
         self.cache = {}
         self.queue = Queue(maxsize=60)
         self.cmd = Cmd()
-        self.admin_id = config["admin_id"]
+        self.admin_id = config.get("VKSettings", "admin_id")
         self.blacklist = []
         self.captcha_needed = False
         self.captcha_img = None
         self.captcha_sid = None
-        self.timeout = config["timeout"]
+        self.timeout = config.get("VKSettings", "timeout")
         if os.path.exists("debug.txt"):
             self.debug = True
         else:
@@ -96,7 +104,7 @@ class VK(object):
 
 
     def auth(self):
-        self.session = vk.Session(access_token=self.config["vk_token"])
+        self.session = vk.Session(access_token=self.config.get("VKSettings", "vk_token"))
         self.vkapi = vk.API(self.session)
         try:
             self.bot_id = self.vkapi.users.get()[0]["uid"]
@@ -433,7 +441,8 @@ class Cmd(object):
                                 vkapi.send(msg)
 
 
-config = ConfigObj("settings.ini", encoding='utf8')
+config = ConfigParser.ConfigParser()
+config.read('settings.ini')
 vkapi = VK(config)
 vkapi.auth()
 #print(vkapi.vkapi.users.get(user_ids=1))
