@@ -9,7 +9,6 @@ Python 2/3
 - pip install vk
 - pip install requests
 - pip install requests-futures
-- pip install configobj
 - pip install sqlalchemy
 - pip install dogpile.cache
 
@@ -82,7 +81,6 @@ Requirements:
 
 * vk (pip install vk)
 * requests (pip install requests)
-* configobj (pip install configobj)
 * sqlalchemy (pip install sqlalchemy)
 * dogpile.cache (pip install dogpile.cache)
 * requests-futures (pip install requests-futures)
