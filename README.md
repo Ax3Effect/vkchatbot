@@ -1,6 +1,13 @@
 python-vkchatbot - Чат бот для ВКонтакте
 ============
 
+Эта версия больше не поддерживается. Используйте https://github.com/Ax3Effect/errbot-vk
+=
+
+This repo is not supported anymore. Please use https://github.com/Ax3Effect/errbot-vk
+=
+
+
 README
 Для тех, кто в первый раз ставит бота:
 Python 2/3
